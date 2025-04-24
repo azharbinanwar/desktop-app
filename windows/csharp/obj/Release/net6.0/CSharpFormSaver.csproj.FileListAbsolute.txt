@@ -1,0 +1,5 @@
+D:\flutter\my_app\windows\csharp\obj\Release\net6.0\CSharpFormSaver.csproj.AssemblyReference.cache
+D:\flutter\my_app\windows\csharp\obj\Release\net6.0\CSharpFormSaver.GeneratedMSBuildEditorConfig.editorconfig
+D:\flutter\my_app\windows\csharp\obj\Release\net6.0\CSharpFormSaver.AssemblyInfoInputs.cache
+D:\flutter\my_app\windows\csharp\obj\Release\net6.0\CSharpFormSaver.AssemblyInfo.cs
+D:\flutter\my_app\windows\csharp\obj\Release\net6.0\CSharpFormSaver.csproj.CoreCompileInputs.cache
