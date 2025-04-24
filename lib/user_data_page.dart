@@ -39,25 +39,27 @@ class _FormPageState extends State<FormPage> {
           'location': _locationController.text,
           'dateOfBirth': _selectedDate?.toIso8601String() ?? '',
         });
+        debugPrint('_FormPageState._saveFormData: result $result');
 
         // Parse result as a Map
         Map<String, dynamic> response = jsonDecode(result);
 
-        if (response['success']) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['message'] ?? 'Data saved successfully')));
+        if (response['Success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(response['Message'] ?? 'Data saved successfully')));
           _resetForm();
           _loadRecords();
         } else {
           setState(() {
             _errorMessage = response['error'] ?? 'Unknown error';
           });
+          debugPrint('_FormPageState._saveFormData: Failed to save data: ${response['error']}');
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save data: $_errorMessage')));
         }
-      } catch (e) {
+      } catch (e, s) {
         setState(() {
           _errorMessage = e.toString();
         });
-        debugPrint('_FormPageState._saveFormData: $e');
+        debugPrint('_FormPageState._saveFormData: d $e \n$s');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
       } finally {
         setState(() {
@@ -76,26 +78,42 @@ class _FormPageState extends State<FormPage> {
     try {
       final result = await platform.invokeMethod('getFormData');
 
-      // Parse result as a Map
-      Map<String, dynamic> response = jsonDecode(result);
-
-      if (response['success']) {
+      if (result == null || result.toString().isEmpty) {
         setState(() {
-          _records = List<Map<String, dynamic>>.from(response['data'] ?? []);
-        });
-      } else {
-        setState(() {
-          _errorMessage = response['error'] ?? 'Unknown error';
+          _errorMessage = "Received empty response from native code";
           _records = [];
         });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load data: $_errorMessage')));
+        return;
       }
-    } catch (e) {
+
+      debugPrint("Received data: $result");
+
+      try {
+        final  response = jsonDecode(result.toString());
+
+        if (response['Success'] == true) {
+          setState(() {
+            _records = List<Map<String, dynamic>>.from(response['Data'] ?? []);
+          });
+        } else {
+          setState(() {
+            _errorMessage = response['error'] ?? 'Unknown error';
+            _records = [];
+          });
+        }
+      } catch (e , s) {
+        debugPrint('_FormPageState._loadRecords: Failed to parse JSON: $e\n$s');
+        setState(() {
+          _errorMessage = "Failed to parse JSON: $e";
+          _records = [];
+        });
+      }
+    } catch (e, s) {
+      debugPrint('_FormPageState._loadRecords: $e\n$s');
       setState(() {
         _errorMessage = e.toString();
         _records = [];
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading data: $e')));
     } finally {
       setState(() {
         _isLoading = false;

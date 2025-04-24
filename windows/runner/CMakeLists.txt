@@ -38,8 +38,8 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 
 add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy
-  "${CMAKE_CURRENT_SOURCE_DIR}/CSharpFormSaver.dll"
-  "$<TARGET_FILE_DIR:${BINARY_NAME}>/CSharpFormSaver.dll")
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/CSharpFormSaver.dll"
+    "$<TARGET_FILE_DIR:${BINARY_NAME}>/CSharpFormSaver.dll")
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)

@@ -18,21 +18,26 @@ namespace CSharpFormSaver
                 string dob = Marshal.PtrToStringUTF8(dobPtr);
 
                 bool result = FormHandler.SaveFormDataInternal(name, fullName, location, dob);
-                string response = JsonSerializer.Serialize(new {
-                    success = result,
-                    message = "Data saved successfully",
-                    error = ""
-                });
-                return Marshal.StringToCoTaskMemUTF8(response);
+
+                var response = new OperationResponse {
+                    Success = result,
+                    Message = "Data saved successfully",
+                    Error = ""
+                };
+
+                string jsonResponse = JsonSerializer.Serialize(response, AppJsonContext.Default.OperationResponse);
+                return Marshal.StringToCoTaskMemUTF8(jsonResponse);
             }
             catch (Exception ex)
             {
-                string response = JsonSerializer.Serialize(new {
-                    success = false,
-                    message = "",
-                    error = ex.Message
-                });
-                return Marshal.StringToCoTaskMemUTF8(response);
+                var response = new OperationResponse {
+                    Success = false,
+                    Message = "",
+                    Error = ex.Message
+                };
+
+                string jsonResponse = JsonSerializer.Serialize(response, AppJsonContext.Default.OperationResponse);
+                return Marshal.StringToCoTaskMemUTF8(jsonResponse);
             }
         }
 
@@ -42,24 +47,26 @@ namespace CSharpFormSaver
             try
             {
                 var data = FormHandler.GetFormDataInternal();
-                string json = JsonSerializer.Serialize(new {
-                    success = true,
-                    data = data,
-                    error = ""
-                });
 
-                // Allocate memory that won't be garbage collected
-                IntPtr ptr = Marshal.StringToCoTaskMemUTF8(json);
-                return ptr;
+                var response = new OperationResponse {
+                    Success = true,
+                    Data = data,
+                    Error = ""
+                };
+
+                string jsonResponse = JsonSerializer.Serialize(response, AppJsonContext.Default.OperationResponse);
+                return Marshal.StringToCoTaskMemUTF8(jsonResponse);
             }
             catch (Exception ex)
             {
-                string errorJson = JsonSerializer.Serialize(new {
-                    success = false,
-                    data = new List<Dictionary<string, string>>(),
-                    error = ex.Message
-                });
-                return Marshal.StringToCoTaskMemUTF8(errorJson);
+                var response = new OperationResponse {
+                    Success = false,
+                    Data = new List<Dictionary<string, string>>(),
+                    Error = ex.Message
+                };
+
+                string jsonResponse = JsonSerializer.Serialize(response, AppJsonContext.Default.OperationResponse);
+                return Marshal.StringToCoTaskMemUTF8(jsonResponse);
             }
         }
     }

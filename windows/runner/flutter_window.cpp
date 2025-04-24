@@ -5,6 +5,9 @@
 #include <flutter/standard_method_codec.h>
 #include <windows.h>
 #include <string>
+#include <Shlwapi.h>  // Added for path functions
+
+#pragma comment(lib, "Shlwapi.lib")  // Link with Shlwapi.lib for path functions
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -77,10 +80,33 @@ bool FlutterWindow::OnCreate() {
             [](const flutter::MethodCall<flutter::EncodableValue>& call,
                std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
                 if (call.method_name() == "saveFormData" || call.method_name() == "getFormData") {
-                    // Load C# DLL
-                    HMODULE module = LoadLibrary(TEXT("CSharpFormSaver.dll"));
+                    // Try multiple DLL locations
+                    HMODULE module = NULL;
+
+                    // Try current directory first
+                    module = LoadLibrary(TEXT("CSharpFormSaver.dll"));
+
+                    // If not found, try application directory
                     if (module == NULL) {
-                        result->Error("DLL_ERROR", "Failed to load CSharpFormSaver.dll");
+                        TCHAR exePath[MAX_PATH];
+                        GetModuleFileName(NULL, exePath, MAX_PATH);
+                        PathRemoveFileSpec(exePath);
+                        TCHAR dllPath[MAX_PATH];
+                        // We need to handle TCHAR which could be char or wchar_t
+#ifdef UNICODE
+                        wsprintf(dllPath, L"%s\\CSharpFormSaver.dll", exePath);
+#else
+                        sprintf_s(dllPath, "%s\\CSharpFormSaver.dll", exePath);
+#endif
+                        module = LoadLibrary(dllPath);
+                    }
+
+                    // If still not found, report error with last error code
+                    if (module == NULL) {
+                        DWORD error = GetLastError();
+                        char errorMsg[256];
+                        sprintf_s(errorMsg, "Failed to load CSharpFormSaver.dll. Error code: %lu", error);
+                        result->Error("DLL_ERROR", errorMsg);
                         return;
                     }
 
@@ -90,16 +116,82 @@ bool FlutterWindow::OnCreate() {
                         const auto* args = std::get_if<flutter::EncodableMap>(call.arguments());
                         if (!args) {
                             result->Error("INVALID_ARGS", "Invalid arguments");
+                            FreeLibrary(module);
                             return;
                         }
 
-                        // Execute C# function
-                        // Implementation omitted for brevity
-                        result->Success(flutter::EncodableValue(true));
+                        // Get function pointer from DLL
+                        typedef const char* (*SaveFormDataFunc)(const char*, const char*, const char*, const char*);
+                        SaveFormDataFunc saveFormData = (SaveFormDataFunc)GetProcAddress(module, "SaveFormData");
+                        if (saveFormData == NULL) {
+                            DWORD errorCode = GetLastError();
+                            char errorMsg[256];
+                            sprintf_s(errorMsg, "SaveFormData function not found. Error code: %lu", errorCode);
+                            FreeLibrary(module);
+                            result->Error("FUNCTION_NOT_FOUND", errorMsg);
+                            return;
+                        }
+
+                        // Extract parameters
+                        std::string name, fullName, location, dob;
+                        auto nameIt = args->find(flutter::EncodableValue("name"));
+                        if (nameIt != args->end()) {
+                            name = std::get<std::string>(nameIt->second);
+                        }
+
+                        auto fullNameIt = args->find(flutter::EncodableValue("fullName"));
+                        if (fullNameIt != args->end()) {
+                            fullName = std::get<std::string>(fullNameIt->second);
+                        }
+
+                        auto locationIt = args->find(flutter::EncodableValue("location"));
+                        if (locationIt != args->end()) {
+                            location = std::get<std::string>(locationIt->second);
+                        }
+
+                        auto dobIt = args->find(flutter::EncodableValue("dateOfBirth"));
+                        if (dobIt != args->end()) {
+                            dob = std::get<std::string>(dobIt->second);
+                        }
+
+                        // Call C# function
+                        const char* jsonResult = saveFormData(name.c_str(), fullName.c_str(), location.c_str(), dob.c_str());
+                        if (jsonResult == NULL) {
+                            result->Error("CALL_ERROR", "Failed to get result from SaveFormData");
+                        } else {
+                            std::string resultStr(jsonResult);
+                            // Free the memory allocated by the C# function
+                            CoTaskMemFree((LPVOID)jsonResult);
+                            result->Success(flutter::EncodableValue(resultStr));
+                        }
                     } else { // getFormData
-                        // Implementation omitted for brevity
-                        flutter::EncodableList records;
-                        result->Success(flutter::EncodableValue(records));
+                        // Get function pointer from DLL - explicitly use GetProcAddress
+                        typedef const char* (*GetFormDataFunc)();
+                        GetFormDataFunc getFormData = (GetFormDataFunc)GetProcAddress(module, "GetFormData");
+
+                        if (getFormData == NULL) {
+                            DWORD errorCode = GetLastError();
+                            char errorMsg[256];
+                            sprintf_s(errorMsg, "GetFormData function not found. Error code: %lu", errorCode);
+                            FreeLibrary(module);
+                            result->Error("FUNCTION_NOT_FOUND", errorMsg);
+                            return;
+                        }
+
+                        // Call C# function
+                        try {
+                            const char* jsonResult = getFormData();
+                            if (jsonResult == NULL) {
+                                result->Success(flutter::EncodableValue("[]"));
+                            } else {
+                                std::string resultStr(jsonResult);
+                                // Free the memory allocated by the C# function
+                                CoTaskMemFree((LPVOID)jsonResult);
+                                result->Success(flutter::EncodableValue(resultStr));
+                            }
+                        } catch (...) {
+                            result->Error("CALL_ERROR", "Exception while calling GetFormData");
+                        }
                     }
 
                     FreeLibrary(module);

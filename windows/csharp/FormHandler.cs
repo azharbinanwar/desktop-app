@@ -19,39 +19,46 @@ namespace CSharpFormSaver
 
         public static bool SaveFormDataInternal(string name, string fullName, string location, string dob)
         {
-            // Create file info
-            var fileInfo = new FileInfo(DataFilePath);
-            // Get directory info
-            var directory = fileInfo.Directory;
-            // Log directory exists status
-            Console.WriteLine($"Directory exists: {directory.Exists}");
-            // Log full path
-            Console.WriteLine($"Full path: {Path.GetFullPath(DataFilePath)}");
+            try {
+                // Create file info
+                var fileInfo = new FileInfo(DataFilePath);
+                // Make sure directory exists
+                Directory.CreateDirectory(fileInfo.Directory.FullName);
 
-            // Create a new form data object
-            var formData = new FormData
-            {
-                Name = name,
-                FullName = fullName,
-                Location = location,
-                DateOfBirth = dob
-            };
+                // Create a new form data object
+                var formData = new FormData
+                {
+                    Name = name,
+                    FullName = fullName,
+                    Location = location,
+                    DateOfBirth = dob
+                };
 
-            // Read existing records
-            List<FormData> records = GetAllRecords();
+                // Read existing records or create empty list if file doesn't exist
+                List<FormData> records;
+                if (File.Exists(DataFilePath)) {
+                    string jsonString = File.ReadAllText(DataFilePath);
+                    if (!string.IsNullOrEmpty(jsonString)) {
+                        records = JsonSerializer.Deserialize(jsonString, AppJsonContext.Default.ListFormData);
+                    } else {
+                        records = new List<FormData>();
+                    }
+                } else {
+                    records = new List<FormData>();
+                }
 
-            // Add new record
-            records.Add(formData);
+                // Add new record
+                records.Add(formData);
 
-            // Save all records back to file
-            string jsonString = JsonSerializer.Serialize(records, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+                // Save all records back to file
+                string outputJson = JsonSerializer.Serialize(records, AppJsonContext.Default.ListFormData);
+                File.WriteAllText(DataFilePath, outputJson);
 
-            File.WriteAllText(DataFilePath, jsonString);
-
-            return true;
+                return true;
+            } catch (Exception ex) {
+                Console.WriteLine($"Error saving form data: {ex.Message}");
+                throw; // Rethrow to propagate to caller
+            }
         }
 
         public static List<Dictionary<string, string>> GetFormDataInternal()
@@ -75,18 +82,16 @@ namespace CSharpFormSaver
 
         private static List<FormData> GetAllRecords()
         {
-            if (!File.Exists(DataFilePath))
-            {
+            if (!File.Exists(DataFilePath)) {
                 return new List<FormData>();
             }
 
             string jsonString = File.ReadAllText(DataFilePath);
-            if (string.IsNullOrEmpty(jsonString))
-            {
+            if (string.IsNullOrEmpty(jsonString)) {
                 return new List<FormData>();
             }
 
-            return JsonSerializer.Deserialize<List<FormData>>(jsonString);
+            return JsonSerializer.Deserialize(jsonString, AppJsonContext.Default.ListFormData);
         }
     }
 }

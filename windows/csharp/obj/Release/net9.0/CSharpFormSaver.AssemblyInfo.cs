@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CSharpFormSaver")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7728be11c6076d47707f244359d88e020aebb957")]
 [assembly: System.Reflection.AssemblyProductAttribute("CSharpFormSaver")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CSharpFormSaver")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

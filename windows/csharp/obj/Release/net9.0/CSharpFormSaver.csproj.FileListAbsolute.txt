@@ -9,3 +9,4 @@ D:\flutter\my_app\windows\csharp\obj\Release\net9.0\CSharpFormSaver.dll
 D:\flutter\my_app\windows\csharp\obj\Release\net9.0\refint\CSharpFormSaver.dll
 D:\flutter\my_app\windows\csharp\obj\Release\net9.0\CSharpFormSaver.pdb
 D:\flutter\my_app\windows\csharp\obj\Release\net9.0\ref\CSharpFormSaver.dll
+D:\flutter\my_app\windows\csharp\obj\Release\net9.0\CSharpFormSaver.sourcelink.json

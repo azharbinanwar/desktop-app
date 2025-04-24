@@ -371,7 +371,7 @@ build runner\my_app.exe: CXX_EXECUTABLE_LINKER__my_app_Debug runner\CMakeFiles\m
   LINK_LIBRARIES = flutter\flutter_wrapper_app.lib  dwmapi.lib  plugins\file_selector_windows\file_selector_windows_plugin.lib  D:\flutter\my_app\windows\flutter\ephemeral\flutter_windows.dll.lib  kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib
   MANIFESTS = D:\flutter\my_app\windows\runner\runner.exe.manifest
   OBJECT_DIR = runner\CMakeFiles\my_app.dir
-  POST_BUILD = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\flutter\my_app\windows\out\build\x64-Debug\runner && "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy D:/flutter/my_app/windows/runner/CSharpFormSaver.dll D:/flutter/my_app/windows/out/build/x64-Debug/runner/CSharpFormSaver.dll"
+  POST_BUILD = C:\WINDOWS\system32\cmd.exe /C "cd /D D:\flutter\my_app\windows\out\build\x64-Debug\runner && "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_if_different D:/flutter/my_app/windows/runner/CSharpFormSaver.dll D:/flutter/my_app/windows/out/build/x64-Debug/runner/CSharpFormSaver.dll"
   PRE_LINK = cd .
   TARGET_COMPILE_PDB = runner\CMakeFiles\my_app.dir\
   TARGET_FILE = runner\my_app.exe
